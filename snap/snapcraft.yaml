@@ -1,32 +1,38 @@
-name: ubuntu-desktop-installer
-version: git
-summary: Ubuntu Desktop Installer
+name: bne-guard-vpn
+version: 1.0.0
+summary: BNE GUARD VPN BY BNESIM
 description: |
-  This project is a modern implementation of the Ubuntu Desktop installer,
-  using subiquity as a backend and Flutter for the UI.
+  ACCESS YOUR FAVORITE CONTENT
+  BNE Guard VPN allows you to access your favorite content without any hassle. With our app, you can bypass geo-restrictions and access content that may not be available in your country.
+  Whether you want to stream your favorite TV show, watch a movie, or access a social media platform that’s blocked in your location, BNE Guard VPN has got you covered.
+
 grade: stable
 confinement: classic
 base: core22
-issues: https://bugs.launchpad.net/ubuntu-desktop-installer/+filebug
-contact: https://bugs.launchpad.net/ubuntu-desktop-installer/+filebug
+
+slots:
+  dbus-bne-guard-vpn:
+    interface: dbus
+    bus: system
+    name: com.bnesim.bneguard
+    plugs:
+      - process-control
+      - network
+      - network-bind
+      - network-control
+      - firewall-control
+      - network-manager
+      - network-manager-observe
+      - network-observe
+      - network-setup-control
+      - network-status
+      - network-setup-observe
 
 apps:
-  subiquity-server:
-    command: bin/subiquity-server
-    daemon: simple
-    restart-condition: always
-    environment:
-      PATH_ORIG: $PATH
-      PYTHONPATH_ORIG: $PYTHONPATH
-      LD_LIBRARY_PATH_ORIG: $LD_LIBRARY_PATH
-
-  subiquity-loadkeys:
-    command: bin/subiquity/bin/subiquity-loadkeys
-
-  ubuntu-desktop-installer:
-    command: bin/ubuntu_desktop_installer
+  bne-guard-vpn:
+    command: bin/bneguard
     command-chain: [bin/launcher]
-    desktop: bin/data/flutter_assets/assets/ubuntu-desktop-installer.desktop
+    desktop: bin/data/flutter_assets/assets/bne-guard-vpn.desktop
     environment:
       PATH: $SNAP/usr/bin:$SNAP/bin:$PATH
       LIBGL_DRIVERS_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET/dri
@@ -34,12 +40,20 @@ apps:
       LIVE_RUN: 1
       LOG_LEVEL: debug
       SNAP_PYTHON: python3
-
-  probert:
-    command: bin/probert
-
-  os-prober:
-    command: usr/bin/os-prober
+    plugs:
+      - process-control
+      - network
+      - network-bind
+      - network-control
+      - firewall-control
+      - network-manager
+      - network-manager-observe
+      - network-observe
+      - network-setup-control
+      - network-status
+      - network-setup-observe
+    slots:
+      - dbus-bne-guard-vpn
 
 parts:
   curtin:
@@ -66,68 +80,9 @@ parts:
     organize:
       lib/python*/site-packages/usr/lib/curtin: usr/lib/
 
-  probert:
-    plugin: nil
-    source: https://github.com/canonical/probert.git
-    source-type: git
-    source-commit: ae758355b610e389099abdb2397bb41ad49409ec
-    override-build: *pyinstall
-    build-packages:
-      - build-essential
-      - libnl-3-dev
-      - libnl-genl-3-dev
-      - libnl-route-3-dev
-      - pkg-config
-      - python3-dev
-      - python3-pip
-    build-attributes: [enable-patchelf]
-    stage:
-      - '*'
-      - -bin/python3*
-
-  subiquitydeps:
-    plugin: nil
-    build-attributes: [enable-patchelf]
-    stage-packages:
-      # This list includes the dependencies for curtin and probert as well,
-      # there doesn't seem to be any real benefit to listing them separately.
-      - cloud-init
-      - iso-codes
-      - libpython3-stdlib
-      - libpython3.10-minimal
-      - libpython3.10-stdlib
-      - libsystemd0
-      - lsb-release
-      - ntfs-3g
-      - python3-aiohttp
-      - python3-apport
-      - python3-attr
-      - python3-bson
-      - python3-jsonschema
-      - python3-minimal
-      - python3-oauthlib
-      - python3-pkg-resources
-      - python3-pyroute2
-      - python3-pyrsistent
-      - python3-pyudev
-      - python3-requests
-      - python3-requests-unixsocket
-      - python3-systemd
-      - python3-urwid
-      - python3-yaml
-      - python3-yarl
-      - python3.10-minimal
-      - ssh-import-id
-      - ubuntu-advantage-tools
-      # WSL specifics:
-      - language-selector-common
-      - locales
-    prime:
-      - -lib/systemd/system/*
-
   flutter-git:
     source: https://github.com/flutter/flutter.git
-    source-tag: 3.10.5
+    source-branch: stable
     source-depth: 1
     plugin: nil
     override-build: |
@@ -145,46 +100,28 @@ parts:
       - unzip
       - xz-utils
       - zip
+      - libsecret-1-dev
+      - libjsoncpp-dev
+      - libayatana-appindicator3-dev
     override-prime: ''
 
-  ubuntu-desktop-installer:
+  bne-guard-vpn:
     after: [flutter-git]
     source: .
-    source-type: git
     plugin: nil
     build-attributes: [enable-patchelf]
     override-build: |
       set -eux
       mkdir -p $CRAFT_PART_INSTALL/bin/lib
       cp snap/local/launcher $CRAFT_PART_INSTALL/bin/
-      cp snap/local/subiquity-server $CRAFT_PART_INSTALL/bin/
-      cp -r vendor/ubuntu-desktop-provision/packages/subiquity_client/subiquity $CRAFT_PART_INSTALL/bin/
-      mkdir -p $CRAFT_PART_INSTALL/etc/subiquity
-      cp -r snap/local/postinst.d $CRAFT_PART_INSTALL/etc/subiquity
       # https://github.com/canonical/ubuntu-desktop-installer/issues/1146
-      (cd vendor/ubuntu-desktop-provision/packages/ubuntu_wizard && flutter pub get)
-      cd packages/ubuntu_desktop_installer
+      # (cd vendor/ubuntu-desktop-provision/packages/ubuntu_wizard && flutter pub get)
+      cd packages/bnegurad
+      flutter clean
       flutter pub get
       flutter build linux --release -v
       cp -r build/linux/*/release/bundle/* $CRAFT_PART_INSTALL/bin/
-
-  ubuntu-wsl-setup:
-    after: [flutter-git]
-    source: .
-    source-type: git
-    plugin: nil
-    override-build: |
-      set -eux
-      # ubuntu-desktop-install will install subiquity in bin/subiquity. It’s not a real build-dep ordering though.
-      mkdir -p $CRAFT_PART_INSTALL/bin
-      mkdir -p $CRAFT_PART_INSTALL/usr/libexec
-      cd packages/ubuntu_wsl_setup
-      flutter pub get
-      flutter build linux --release -v
-      cp -r build/linux/*/release/bundle/* $CRAFT_PART_INSTALL/usr/libexec
-      cp -p ubuntu-wsl-setup $CRAFT_PART_INSTALL/bin/
-      # Create the theme empty directories for bindmounting the common-themes snap
-      mkdir -p $CRAFT_PART_INSTALL/data-dir/icons $CRAFT_PART_INSTALL/data-dir/sounds $CRAFT_PART_INSTALL/data-dir/themes
+      cp -r wireguard-tools $CRAFT_PART_INSTALL/bin/
 
   libraries:
     plugin: nil
@@ -215,6 +152,11 @@ parts:
       - shared-mime-info
       - libglib2.0-bin
       - libibus-1.0-5
+      - libsecret-1-0
+      - libjsoncpp-dev
+      - libayatana-appindicator3-dev
+      - wireguard
+      - openresolv
     prime:
       - usr/lib/*/libEGL*.so.*
       - usr/lib/*/libGL*.so.*
@@ -251,26 +193,24 @@ parts:
       - -usr/lib/*/pkgconfig
       - -usr/lib/pkgconfig
       - -usr/share/pkgconfig
+      - usr/lib/*/libsecret-1.so.*
+      - usr/lib/*/libsecr*
+      - usr/lib/*/libjson*
+      - usr/lib/*/libjsoncpp.25.so.*
+      - usr/lib/*/libayatana-appindicator3.so.*
+      - usr/lib/*/libwireguard.so.*
+      - usr/lib/*/libopenresolv.so.*
 
   dri-no-patchelf:
     after: [libraries]
     plugin: nil
     stage-packages:
       - libgl1-mesa-dri
+      - libayatana-appindicator3-dev
+      - wireguard
+      - openresolv
     build-attributes:
       - no-patchelf # Otherwise snapcraft may strip the build ID and cause the driver to crash
     stage:
       - usr/lib/${CRAFT_ARCH_TRIPLET}/dri
       - usr/share/drirc.d
-
-  os-prober:
-    plugin: nil
-    stage-packages: [os-prober]
-    build-attributes: [enable-patchelf]
-    override-stage: |
-      craftctl default
-      for file in $(grep -lr /usr | grep 'usr/[^/]*/[^/]*-probe[sr]'); do
-        sed -i 's, \(/usr\), $SNAP\1,' $file
-      done
-      sed -i 's/mkdir "$tmpmnt"/mkdir -p "$tmpmnt"/' \
-          usr/lib/os-probes/50mounted-tests
