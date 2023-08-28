@@ -15,18 +15,6 @@ slots:
     interface: dbus
     bus: system
     name: com.bnesim.bneguard
-    plugs:
-      - process-control
-      - network
-      - network-bind
-      - network-control
-      - firewall-control
-      - network-manager
-      - network-manager-observe
-      - network-observe
-      - network-setup-control
-      - network-status
-      - network-setup-observe
 
 apps:
   bne-guard-vpn:
@@ -40,18 +28,6 @@ apps:
       LIVE_RUN: 1
       LOG_LEVEL: debug
       SNAP_PYTHON: python3
-    plugs:
-      - process-control
-      - network
-      - network-bind
-      - network-control
-      - firewall-control
-      - network-manager
-      - network-manager-observe
-      - network-observe
-      - network-setup-control
-      - network-status
-      - network-setup-observe
     slots:
       - dbus-bne-guard-vpn
 
@@ -100,7 +76,6 @@ parts:
       - unzip
       - xz-utils
       - zip
-      - libsecret-1-dev
       - libjsoncpp-dev
       - libayatana-appindicator3-dev
     override-prime: ''
@@ -152,11 +127,8 @@ parts:
       - shared-mime-info
       - libglib2.0-bin
       - libibus-1.0-5
-      - libsecret-1-0
       - libjsoncpp-dev
       - libayatana-appindicator3-dev
-      - wireguard
-      - openresolv
     prime:
       - usr/lib/*/libEGL*.so.*
       - usr/lib/*/libGL*.so.*
@@ -193,13 +165,10 @@ parts:
       - -usr/lib/*/pkgconfig
       - -usr/lib/pkgconfig
       - -usr/share/pkgconfig
-      - usr/lib/*/libsecret-1.so.*
       - usr/lib/*/libsecr*
       - usr/lib/*/libjson*
       - usr/lib/*/libjsoncpp.25.so.*
       - usr/lib/*/libayatana-appindicator3.so.*
-      - usr/lib/*/libwireguard.so.*
-      - usr/lib/*/libopenresolv.so.*
 
   dri-no-patchelf:
     after: [libraries]
@@ -207,8 +176,6 @@ parts:
     stage-packages:
       - libgl1-mesa-dri
       - libayatana-appindicator3-dev
-      - wireguard
-      - openresolv
     build-attributes:
       - no-patchelf # Otherwise snapcraft may strip the build ID and cause the driver to crash
     stage:
