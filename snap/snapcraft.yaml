@@ -10,12 +10,6 @@ grade: stable
 confinement: classic
 base: core22
 
-slots:
-  dbus-bne-guard-vpn:
-    interface: dbus
-    bus: system
-    name: com.bnesim.bneguard
-
 apps:
   bne-guard-vpn:
     command: bin/bneguard
@@ -28,8 +22,6 @@ apps:
       LIVE_RUN: 1
       LOG_LEVEL: debug
       SNAP_PYTHON: python3
-    slots:
-      - dbus-bne-guard-vpn
 
 parts:
   curtin:
